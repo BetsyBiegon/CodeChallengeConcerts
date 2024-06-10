@@ -1,124 +1,135 @@
 class Band:
+    all=[]
     def __init__(self, name, hometown):
-        self._name = name
-        self._hometown = hometown
-        self._concerts = []
-
+        if isinstance(hometown, str) and len(hometown):
+            self._hometown = hometown
+        else:
+            raise ValueError("Hometown must be a non-empty string")
+        if isinstance(name, str) and len(name) > 0:
+            self._name = name
+        else:
+            raise ValueError("Name must be a non-empty string.")
+        Band.all.append(self) 
+    
     @property
     def name(self):
         return self._name
 
     @name.setter
-    def name(self, new_name):
-        if isinstance(new_name, str) and len(new_name) > 0:
-            self._name = new_name
+    def name(self, value):
+        if isinstance(value, str) and len(value) > 0:
+            self._name = value
         else:
-            raise ValueError("Name must be a non-empty string")
+            raise ValueError("Name must be a non-empty string.")
 
     @property
     def hometown(self):
         return self._hometown
 
-    @hometown.setter
-    def hometown(self, new_hometown):
-        raise AttributeError("Hometown is immutable")
-
     def concerts(self):
-        return self._concerts
+        return [concert for concert in Concert.all_concerts if concert.band == self]
 
     def venues(self):
-        return list(set(concert.venue for concert in self._concerts))
+        venues = list(set(concert.venue for concert in self.concerts()))
+        return venues if venues else None
 
     def play_in_venue(self, venue, date):
-        concert = Concert(date=date, band=self, venue=venue)
-        self._concerts.append(concert)
-        return concert
+        if not isinstance(venue, Venue):
+            raise ValueError("Venue must be of type Venue")
+        return Concert(date, self, venue)
 
     def all_introductions(self):
-        return [concert.introduction() for concert in self._concerts]
+        return [
+            concert.introduction() for concert in self.concerts() if concert.introduction()
+        ]
 
 
 class Concert:
-    all = []
+    all_concerts = []
 
     def __init__(self, date, band, venue):
-        self._date = date
+        if isinstance(date, str) and len(date) > 0:
+            self._date = date
+        else:
+            raise ValueError("Date must be a non-empty string.")
+        if not isinstance(band, Band):
+            raise TypeError("Band must be of type Band")
         self._band = band
-        self._venue = venue
-        Concert.all.append(self)
-        band._concerts.append(self)
-        venue._concerts.append(self)
+        if isinstance(venue, Venue):
+            self._venue = venue
+        else:
+            raise ValueError("Venue must be an instance of Venue class.")
+        Concert.all_concerts.append(self)
 
     @property
     def date(self):
         return self._date
 
     @date.setter
-    def date(self, new_date):
-        if isinstance(new_date, str) and len(new_date) > 0:
-            self._date = new_date
+    def date(self, value):
+        if isinstance(value, str) and len(value) > 0:
+            self._date = value
         else:
-            raise ValueError("Date must be a non-empty string")
-
-    @property
-    def venue(self):
-        return self._venue
-
-    @venue.setter
-    def venue(self, new_venue):
-        if isinstance(new_venue, Venue):
-            self._venue = new_venue
-        else:
-            raise ValueError("Venue must be a Venue instance")
+            raise ValueError("Date must be a non-empty string.")
 
     @property
     def band(self):
         return self._band
 
-    @band.setter
-    def band(self, new_band):
-        if isinstance(new_band, Band):
-            self._band = new_band
-        else:
-            raise ValueError("Band must be a Band instance")
+    @property
+    def venue(self):
+        return self._venue
 
     def hometown_show(self):
-        return self._venue.city == self._band.hometown
+        return self.band.hometown == self.venue.city
 
     def introduction(self):
-        return f"Hello {self._venue.city}!!!!! We are {self._band.name} and we're from {self._band.hometown}"
+        return f"Hello {self.venue.city}!!!!! We are {self.band.name} and we're from {self.band.hometown}"
 
 
 class Venue:
+    all=[]
     def __init__(self, name, city):
-        self._name = name
-        self._city = city
-        self._concerts = []
+        if isinstance(name, str) and len(name) > 0:
+            self._name = name
+        else:
+            raise ValueError("Name must be a non-empty string.")
+        if isinstance(city, str) and len(city) > 0:
+            self._city = city
+        else:
+            raise ValueError("City must be a non-empty string.")
+        Venue.all.append(self)
 
     @property
     def name(self):
         return self._name
 
     @name.setter
-    def name(self, new_name):
-        if isinstance(new_name, str) and len(new_name) > 0:
-            self._name = new_name
+    def name(self, value):
+        if isinstance(value, str) and len(value) > 0:
+            self._name = value
         else:
-            raise ValueError("Name must be a non-empty string")
+            raise ValueError("Name must be a non-empty string.")
 
     @property
     def city(self):
         return self._city
 
     @city.setter
-    def city(self, new_city):
-        if isinstance(new_city, str) and len(new_city) > 0:
-            self._city = new_city
+    def city(self, value):
+        if isinstance(value, str) and len(value) > 0:
+            self._city = value
         else:
-            raise ValueError("City must be a non-empty string")
+            raise ValueError("City must be a non-empty string.")
 
     def concerts(self):
-        return self._concerts
+        return [concert for concert in Concert.all_concerts if concert.venue == self]
 
     def bands(self):
-        return list(set(concert.band for concert in self._concerts))
+        return list({concert.band for concert in self.concerts()})
+    
+    def concert_on(self, date):
+        for concert in self.concerts():
+            if concert.date == date:
+                return concert
+        return None
